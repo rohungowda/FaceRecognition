@@ -23,6 +23,6 @@ class Image_Features_Dataset(Dataset):
         
         res = list(self.landmarks.iloc[idx, 2:])
         res = [[res[r - 1], res[r]] for r in range(1,len(res),2)]
-        keypoints = torch.tensor(res).T
+        keypoints = torch.tensor(res) / 255.0
 
         return image, label, keypoints

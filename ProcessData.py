@@ -71,6 +71,7 @@ def Process_Data():
             data_point = [image, i] + get_landmarks(image)
             dataframe.append(data_point)
             print(str((j/len(images)) * 100))
+        break
 
 
     df = pd.DataFrame(dataframe, columns=["ImageFileName","Class", "lefteye_x", "lefteye_y", "righteye_x", "righteye_y", "nose_x", "nose_y", "leftmouth_x", "leftmouth_y", "rightmouth_x", "rightmouth_y"])
@@ -84,4 +85,4 @@ def Process_Data():
     print("Number of Training Samples: " + str(len(train_df)))
     print("Number of Testing Samples: " + str(len(test_df)))
 
-#Process_Data()
+Process_Data()
