@@ -12,11 +12,15 @@ def PrecomputePositionalEncoding():
     # sinsuodial functions
     positions = torch.arange(int(N + 1)).unsqueeze(1).double()
     embedding_positions = torch.arange(EMBEDDING_DIM).unsqueeze(0).double()
+    even_indices= (embedding_positions[embedding_positions % 2 == 0]).int()
+    odd_indices = (embedding_positions[embedding_positions % 2 != 0]).int()
+
     encoded_positions = positions / (10000 ** ((2.0 * embedding_positions) / EMBEDDING_DIM))
 
-    # just have to do sin and cosine for ecen and odd
+    encoded_positions[:, even_indices]= torch.sin(encoded_positions[:, even_indices])
+    encoded_positions[:, odd_indices]= torch.cos(encoded_positions[:, odd_indices])
 
-    print(encoded_positions[2])
+    return encoded_positions
 
 def PrecomputeDistances():
     n = IMAGE_SIZE / PATCH_SIZE
@@ -48,5 +52,3 @@ def PrecomputeMeshGrid():
 
 
 # 256 x 2 (MeshGrid before normalization)
-
-PrecomputePositionalEncoding()
