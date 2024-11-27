@@ -18,7 +18,8 @@ class FaceRec(torch.nn.Module):
         b_matrix = self.KR_RPE_layer(keypoints)
         embeddings = self.embedding_layer(patches)
 
-        for _ in range(L):
+        for _ in range(L): # use 1 for cpu testing
+            print(". transformer layer")
             embeddings = self.transformer_layer(embeddings, b_matrix)
 
         logits = self.arcface_layer(embeddings[:,0,:])

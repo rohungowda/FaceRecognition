@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 from torchvision.io import read_image
+from Constants import IMAGE_SIZE
 
 
 class Image_Features_Dataset(Dataset):
@@ -23,6 +24,6 @@ class Image_Features_Dataset(Dataset):
         
         res = list(self.landmarks.iloc[idx, 2:])
         res = [[res[r - 1], res[r]] for r in range(1,len(res),2)]
-        keypoints = torch.tensor(res) / 255.0
+        keypoints = torch.tensor(res) / IMAGE_SIZE
 
         return image, label, keypoints

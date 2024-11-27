@@ -7,7 +7,7 @@ TEST_FEATURES_CSV_PATH = "../features/test_features.csv"
 IMAGE_SIZE = float(256.0)
 RANDOM_SEED = 47
 TEST_SIZE = 0.2
-PATCH_SIZE = 128 # Change to 64 for actual model
+PATCH_SIZE = 32 
 N = (IMAGE_SIZE / PATCH_SIZE) *  (IMAGE_SIZE / PATCH_SIZE)
 
 ATTENTION_HEADS = 16

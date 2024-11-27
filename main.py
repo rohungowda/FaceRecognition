@@ -19,7 +19,7 @@ DistanceMatrix, K = PrecomputeDistances()
 position_embed = PrecomputePositionalEncoding()
 
 train_dataset = Image_Features_Dataset(TRAIN_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
-test_dataset = Image_Features_Dataset(TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
+#test_dataset = Image_Features_Dataset(TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
 
 train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 
@@ -31,26 +31,28 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.1)
 loss = torch.nn.CrossEntropyLoss()
 epochs = 5
 
-iteration_number = 10
 
-train_metric_check = len(train_dataloader) // iteration_number
+train_metric_check = 10
+
 
 for e in range(epochs):
     print(f"Epoch {e}")
     running_loss = 0.0
+    total_loss = 0.0
 
     for iteration, batch in enumerate(train_dataloader):
         image, label, keypoints = batch
+
         optimizer.zero_grad()
 
-
         image = image.to(device)
-        label = label.unsqueeze(1).to(device)
+        label = label.to(device)
         keypoints = keypoints.to(device)
 
         patches = ComputePatches(image)
         
         logits = model(patches, keypoints)
+        logits = logits.squeeze(-1)
 
         loss_value = loss(logits,label)
         loss_value.backward()
@@ -59,6 +61,13 @@ for e in range(epochs):
 
         running_loss += loss_value.item()
 
-        if iteration % train_metric_check == 0:
+        total_loss += running_loss
+
+        if iteration % train_metric_check == (train_metric_check - 5):
             print(f"Metric Calculation at Iteration {iteration}")
-            print(f"Average Loss {(running_loss/iteration)}")
+            print(f"Iteration Average Loss {(running_loss/(train_metric_check))}")
+            running_loss = 0.0
+
+    print("----------------------------------------------------------------")
+    print(f"Total Average Loss {(total_loss/len(train_dataloader))}")
+    break

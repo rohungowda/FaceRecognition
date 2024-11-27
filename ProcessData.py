@@ -52,7 +52,6 @@ def Process_Data():
 
     # Class_Number: list of images
     identity_hash = defaultdict(list)
-    dataframe = []
 
     for line in identity_lines:
         value,key = line.split(' ')
@@ -87,15 +86,26 @@ def Process_Data():
 
         print(f"Class: {i} completed")
 
-        # was in the middle of class 16
 
-    #train_df, test_df = train_test_split(df, test_size=TEST_SIZE, stratify=df['Class'], random_state=RANDOM_SEED)
+def split_data():
+    df = pd.read_csv(TRAIN_FEATURES_CSV_PATH)
 
-    #train_df.to_csv(TRAIN_FEATURES_CSV_PATH, index=False)
-    #test_df.to_csv(TEST_FEATURES_CSV_PATH, index=False)
+    train_df, test_df = train_test_split(df, test_size=TEST_SIZE, stratify=df['Class'], random_state=RANDOM_SEED)
 
-    #print("Number of Total Samples: " + str(len(df)))
-    #print("Number of Training Samples: " + str(len(train_df)))
-    #print("Number of Testing Samples: " + str(len(test_df)))
+    train_df.to_csv(TRAIN_FEATURES_CSV_PATH, index=False)
+    test_df.to_csv(TEST_FEATURES_CSV_PATH, index=False)
 
-Process_Data()
+    print("Number of Total Samples: " + str(len(df)))
+    print("Number of Training Samples: " + str(len(train_df)))
+    print("Number of Testing Samples: " + str(len(test_df)))
+
+
+print("0 for Processing data, 1 for splitting data, -1 for exit")
+choice = input()
+
+if choice == '0':
+    Process_Data()
+elif choice == '1':
+    split_data()
+else:
+    exit(0)

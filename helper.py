@@ -25,7 +25,7 @@ def PrecomputePositionalEncoding():
 def PrecomputeDistances():
     n = IMAGE_SIZE / PATCH_SIZE
     basis = torch.arange(PATCH_SIZE // 2, IMAGE_SIZE, PATCH_SIZE)
-    pos = (torch.stack([basis.repeat_interleave(int(n)), torch.concat([basis] * int(n), dim=0)], dim=0)).T
+    pos = (torch.stack([basis.repeat_interleave(int(n)), torch.concat([basis] * int(n), dim=0)], dim=0)).T    
     diff = pos.unsqueeze(0) - pos.unsqueeze(1)
     matrix = (torch.floor(torch.sqrt(torch.sum(diff**2, dim=2)))).long() # int64
     return matrix, torch.max(matrix).item() + 1
@@ -47,8 +47,5 @@ def PrecomputeMeshGrid():
 
     n = IMAGE_SIZE / PATCH_SIZE
     basis = torch.arange(PATCH_SIZE // 2, IMAGE_SIZE, PATCH_SIZE)
-    mesh = torch.stack([basis.repeat_interleave(int(n)), torch.concat([basis] * int(n), dim=0)], dim=0) * (1/float(n*n))
+    mesh = torch.stack([basis.repeat_interleave(int(n)), torch.concat([basis] * int(n), dim=0)], dim=0) * (1/IMAGE_SIZE)
     return mesh.T
-
-
-# 256 x 2 (MeshGrid before normalization)
