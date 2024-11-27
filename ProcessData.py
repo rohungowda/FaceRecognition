@@ -15,7 +15,12 @@ from retinaface import RetinaFace
 
 def get_landmarks(image_name):
     keys = ["left_eye", "right_eye", "nose", "mouth_left", "mouth_right"]
-    landmarks = RetinaFace.detect_faces(os.path.join(CELEB_TRAINING_PATH, image_name))['face_1']['landmarks']
+    landmarks = RetinaFace.detect_faces(os.path.join(CELEB_TRAINING_PATH, image_name))
+    if 'face_1' not in landmarks or 'landmarks' not in landmarks['face_1']:
+        return None
+    
+    landmarks = landmarks['face_1']['landmarks']
+
     res = []
     for key in keys:
         x,y = landmarks[key]
@@ -61,28 +66,36 @@ def Process_Data():
     #K_identity = res[-K:]
 
     # **Option 2 using A number limit
-    Limit = 30  # use 25 very usefull
+    Limit = 27  # use 25 very usefull
     K_identity = list(filter(lambda x : len(x[1]) > Limit, res))
     
 
+    columns = ["ImageFileName","Class", "lefteye_x", "lefteye_y", "righteye_x", "righteye_y", "nose_x", "nose_y", "leftmouth_x", "leftmouth_y", "rightmouth_x", "rightmouth_y"]
+
+    df = pd.DataFrame(columns=columns).to_csv(TRAIN_FEATURES_CSV_PATH, index=False)
+
     for i, (Class, images) in enumerate(K_identity):
+        print(str((i/len(K_identity)) * 100))
         for j,image in enumerate(images):
             Process_Image(image)
-            data_point = [image, i] + get_landmarks(image)
-            dataframe.append(data_point)
-            print(str((j/len(images)) * 100))
-        break
+            res =  get_landmarks(image)
+            if res is None:
+                continue
+            data_point = [image, i] + res
+            data_row = pd.DataFrame([data_point], columns=columns)
+            data_row.to_csv(TRAIN_FEATURES_CSV_PATH, mode='a', index=False, header=False)
 
+        print(f"Class: {i} completed")
 
-    df = pd.DataFrame(dataframe, columns=["ImageFileName","Class", "lefteye_x", "lefteye_y", "righteye_x", "righteye_y", "nose_x", "nose_y", "leftmouth_x", "leftmouth_y", "rightmouth_x", "rightmouth_y"])
+        # was in the middle of class 16
 
-    train_df, test_df = train_test_split(df, test_size=TEST_SIZE, stratify=df['Class'], random_state=RANDOM_SEED)
+    #train_df, test_df = train_test_split(df, test_size=TEST_SIZE, stratify=df['Class'], random_state=RANDOM_SEED)
 
-    train_df.to_csv(TRAIN_FEATURES_CSV_PATH, index=False)
-    test_df.to_csv(TEST_FEATURES_CSV_PATH, index=False)
+    #train_df.to_csv(TRAIN_FEATURES_CSV_PATH, index=False)
+    #test_df.to_csv(TEST_FEATURES_CSV_PATH, index=False)
 
-    print("Number of Total Samples: " + str(len(df)))
-    print("Number of Training Samples: " + str(len(train_df)))
-    print("Number of Testing Samples: " + str(len(test_df)))
+    #print("Number of Total Samples: " + str(len(df)))
+    #print("Number of Training Samples: " + str(len(train_df)))
+    #print("Number of Testing Samples: " + str(len(test_df)))
 
 Process_Data()
