@@ -3,6 +3,7 @@ CELEB_IMAGES_ALIGN_PATH = "../img_align_celeba"
 CELEB_TRAINING_PATH = "../features/imgs"
 TRAIN_FEATURES_CSV_PATH = "../features/train_features.csv"
 TEST_FEATURES_CSV_PATH = "../features/test_features.csv"
+MODEL_SAVE_PATH = "../saved_models/"
 
 IMAGE_SIZE = float(256.0)
 RANDOM_SEED = 47
@@ -16,7 +17,9 @@ EMBEDDING_DIM = 768
 CHANNELS = 3
 
 SCALE = 2 # this is fine
-L = 12
-CLASSES = 17
+L = 1 # CHANGE THIS TO 12
+CLASSES = 302 # 0 - 301
+
+
 SUB_CENTERS = 3
 M = 0.5
