@@ -9,8 +9,8 @@ Easily understand defenition
 '''
 
 def PrecomputePositionalEncoding():
-    # sinsuodial functions
-    positions = torch.arange(int(N + 1)).unsqueeze(1).double()
+    # sinsuodial functions +1 without SeqPool Layer
+    positions = torch.arange(int(N)).unsqueeze(1).double()
     embedding_positions = torch.arange(EMBEDDING_DIM).unsqueeze(0).double()
     even_indices= (embedding_positions[embedding_positions % 2 == 0]).int()
     odd_indices = (embedding_positions[embedding_positions % 2 != 0]).int()

@@ -41,6 +41,7 @@ model.load_state_dict(torch.load(os.path.join(MODEL_SAVE_PATH, f"FaceRecModel_{e
 model.eval()
 
 with torch.no_grad():
+    
     test_image = torch.randn((1,3,256,256), dtype=torch.float64)
     keypoints = torch.randn((1,5,2), dtype=torch.float64)
 

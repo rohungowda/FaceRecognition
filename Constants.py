@@ -1,8 +1,8 @@
 CELEB_IDENTITY_PATH = "../Anno/identity_CelebA.txt"
 CELEB_IMAGES_ALIGN_PATH = "../img_align_celeba"
-CELEB_TRAINING_PATH = "../features/imgs"
-TRAIN_FEATURES_CSV_PATH = "../features/train_features.csv"
-TEST_FEATURES_CSV_PATH = "../features/test_features.csv"
+CELEB_TRAINING_PATH = "../new_features/imgs" # change between features and new_features
+TRAIN_FEATURES_CSV_PATH = "../new_features/train_features.csv" # change between features and new_features
+TEST_FEATURES_CSV_PATH = "../new_features/test_features.csv" # change between features and new_features
 MODEL_SAVE_PATH = "../saved_models/"
 
 IMAGE_SIZE = float(256.0)
@@ -18,8 +18,10 @@ CHANNELS = 3
 
 SCALE = 2 # this is fine
 L = 1 # CHANGE THIS TO 12
-CLASSES = 302 # 0 - 301
+CLASSES = 450 # 0 - 449
 
 
 SUB_CENTERS = 3
 M = 0.5
+
+BATCH_SIZE = 64

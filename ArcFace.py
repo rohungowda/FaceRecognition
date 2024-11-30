@@ -10,6 +10,7 @@ class ArcFace(torch.nn.Module):
         self.pool_layer = torch.nn.MaxPool1d(SUB_CENTERS)
 
     def forward(self, X):
+
         norm_X = X.norm(p=2, dim=1)
         norm_W = self.W.norm(p=2)
 
@@ -18,6 +19,6 @@ class ArcFace(torch.nn.Module):
         max_res = self.pool_layer(subCenter_angles)
 
         angular_margins = torch.cos(torch.arccos(max_res) + self.m)
-        logits = torch.softmax(angular_margins, dim=1)
+        logits = torch.softmax(angular_margins, dim=1) # cross Entropy uses loss maybe need to remove?
 
         return logits

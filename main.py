@@ -3,7 +3,7 @@ import torch
 import pickle
 from Dataset import Image_Features_Dataset
 from torch.utils.data import DataLoader
-from Constants import TRAIN_FEATURES_CSV_PATH, TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH, M, MODEL_SAVE_PATH
+from Constants import TRAIN_FEATURES_CSV_PATH, TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH, M, MODEL_SAVE_PATH, BATCH_SIZE
 from helper import PrecomputeMeshGrid, ComputePatches, PrecomputeDistances, PrecomputePositionalEncoding
 from Face_rec import FaceRec
 
@@ -23,8 +23,8 @@ position_embed = PrecomputePositionalEncoding()
 train_dataset = Image_Features_Dataset(TRAIN_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
 test_dataset = Image_Features_Dataset(TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
 
-train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=True)
+train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 model = FaceRec(position_embed, MeshGrid, DistanceMatrix, K, M)
 model = model.to(device)
@@ -50,6 +50,8 @@ def save_losses(type, losses, file_path):
     with open(file_path, 'wb') as f:
         pickle.dump({f'{type}_losses': losses}, f)
 
+print(len(train_dataloader)) # 113 
+print(len(test_dataloader)) # 29
 
 for e in range(epochs):
     print(f"Epoch {e}")
@@ -65,7 +67,7 @@ for e in range(epochs):
         label = label.to(device)
         keypoints = keypoints.to(device)
 
-        patches = ComputePatches(image)
+        patches = ComputePatches(image).to(device)
         
         logits = model(patches, keypoints)
         logits = logits.squeeze(-1)
@@ -73,11 +75,13 @@ for e in range(epochs):
         loss_value = loss(logits,label)
         loss_value.backward()
 
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
         optimizer.step()
 
         running_loss += loss_value.item()
 
-        total_loss += running_loss
+        total_loss += loss_value.item()
 
         # test * remove when done
         break
@@ -120,7 +124,7 @@ for e in range(epochs):
 
                 running_loss += loss_value.item()
 
-                total_loss += running_loss
+                total_loss += loss_value.item()
 
 
                 # test * remove when done
@@ -140,3 +144,4 @@ for e in range(epochs):
     save_losses("Testing", testing_losses, testing_loss_path)
 
     print(f"End of Epoch {e}")
+    # ** testing

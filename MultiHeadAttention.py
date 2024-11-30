@@ -13,14 +13,14 @@ class MultiHeadAttention(torch.nn.Module):
 
     def forward(self, embeddings, B_matrix):
         
-        Qh = (embeddings @ self.WQ).reshape(-1, ATTENTION_HEADS, int(N + 1),  self.division)
-        Kh = (embeddings @ self.WK).reshape(-1, ATTENTION_HEADS, int(N + 1),  self.division).permute(0,1,3,2)
-        Vh = (embeddings @ self.WV).reshape(-1, ATTENTION_HEADS, int(N + 1),  self.division)
+        Qh = (embeddings @ self.WQ).reshape(-1, ATTENTION_HEADS, int(N),  self.division)
+        Kh = (embeddings @ self.WK).reshape(-1, ATTENTION_HEADS, int(N),  self.division).permute(0,1,3,2)
+        Vh = (embeddings @ self.WV).reshape(-1, ATTENTION_HEADS, int(N),  self.division)
 
-        attention_matrix = ((Qh @ Kh) + torch.nn.functional.pad(B_matrix, (1,0,1,0))) / torch.sqrt(torch.tensor(self.division).double())
+        attention_matrix = ((Qh @ Kh) + B_matrix) / torch.sqrt(torch.tensor(self.division).double())
         attention_matrix = torch.softmax(attention_matrix, dim=-1)
 
-        H = (attention_matrix @ Vh).permute(0,2,1,3).reshape(-1, int(N+1), EMBEDDING_DIM)
+        H = (attention_matrix @ Vh).permute(0,2,1,3).reshape(-1, int(N), EMBEDDING_DIM)
 
         MH = H @ self.WO
 
