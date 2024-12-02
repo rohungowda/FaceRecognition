@@ -19,11 +19,11 @@ class Image_Features_Dataset(Dataset):
         
         curr_img_path = os.path.join(self.img_dir, self.landmarks.iloc[idx, 0])
         image = read_image(curr_img_path)
-        image = image.to(torch.float64) / 255.0
+        image = image.to(torch.float32) / 255.0
         label = torch.tensor(self.landmarks.iloc[idx, 1])
         
-        res = list(self.landmarks.iloc[idx, 2:])
-        res = [[res[r - 1], res[r]] for r in range(1,len(res),2)]
-        keypoints = torch.tensor(res) / IMAGE_SIZE
+        #res = list(self.landmarks.iloc[idx, 2:])
+        #res = [[res[r - 1], res[r]] for r in range(1,len(res),2)]
+        #keypoints = torch.tensor(res, dtype=torch.float32) / IMAGE_SIZE
 
-        return image, label, keypoints
+        return image, label

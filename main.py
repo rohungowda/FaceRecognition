@@ -16,9 +16,9 @@ else:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-MeshGrid = PrecomputeMeshGrid()
-DistanceMatrix, K = PrecomputeDistances()
-position_embed = PrecomputePositionalEncoding()
+#MeshGrid = PrecomputeMeshGrid()
+#DistanceMatrix, K = PrecomputeDistances()
+position_embed = PrecomputePositionalEncoding().to(device)
 
 train_dataset = Image_Features_Dataset(TRAIN_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
 test_dataset = Image_Features_Dataset(TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
@@ -26,7 +26,7 @@ test_dataset = Image_Features_Dataset(TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PAT
 train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-model = FaceRec(position_embed, MeshGrid, DistanceMatrix, K, M)
+model = FaceRec(position_embed, M)
 model = model.to(device)
 
 
@@ -59,23 +59,25 @@ for e in range(epochs):
     total_loss = 0.0
 
     for iteration, batch in enumerate(train_dataloader):
-        image, label, keypoints = batch
+        image, label  = batch
 
         optimizer.zero_grad()
 
-        image = image.to(device)
+        vision_patches, conv_patches = ComputePatches(image)
+        vision_patches = vision_patches.to(device)
+        conv_patches = conv_patches.to(device)
         label = label.to(device)
-        keypoints = keypoints.to(device)
 
-        patches = ComputePatches(image).to(device)
-        
-        logits = model(patches, keypoints)
+        # *********************************** #
+
+        logits = model(vision_patches, conv_patches)
         logits = logits.squeeze(-1)
+        
 
         loss_value = loss(logits,label)
         loss_value.backward()
 
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        #torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
         optimizer.step()
 
@@ -84,7 +86,9 @@ for e in range(epochs):
         total_loss += loss_value.item()
 
         # test * remove when done
-        break
+        #print(logits)
+        print(logits.min(), logits.max(), logits.mean())
+
 
 
         if iteration % metric_check == (metric_check - 1):
@@ -109,15 +113,19 @@ for e in range(epochs):
 
     with torch.no_grad():
         for iteration, batch in enumerate(test_dataloader):
-                image, label, keypoints = batch
+                image, label = batch
 
                 image = image.to(device)
                 label = label.to(device)
-                keypoints = keypoints.to(device)
 
-                patches = ComputePatches(image)
+                vision_patches, conv_patches = ComputePatches(image)
+
+                vision_patches = vision_patches.to(device)
+                conv_patches = conv_patches.to(device)
                 
-                logits = model(patches, keypoints)
+                # ************************************ #
+
+                logits = model(vision_patches, conv_patches)
                 logits = logits.squeeze(-1)
 
                 loss_value = loss(logits,label)

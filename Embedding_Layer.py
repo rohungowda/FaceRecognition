@@ -6,7 +6,7 @@ class LearnedEmbeddings(torch.nn.Module):
     def __init__(self, position_embed):
         super().__init__()
 
-        self.W = torch.nn.Parameter(torch.randn(((PATCH_SIZE * PATCH_SIZE * CHANNELS),EMBEDDING_DIM), dtype=torch.float64))
+        self.W = torch.nn.Parameter(torch.randn(((PATCH_SIZE * PATCH_SIZE * CHANNELS),EMBEDDING_DIM), dtype=torch.float32))
         self.position_embed = position_embed
     
     def forward(self, patches):

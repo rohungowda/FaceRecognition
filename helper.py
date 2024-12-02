@@ -1,5 +1,5 @@
 import torch
-from Constants import PATCH_SIZE, IMAGE_SIZE, N, EMBEDDING_DIM
+from Constants import PATCH_SIZE, IMAGE_SIZE, N, EMBEDDING_DIM, CHANNELS
 
 
 '''
@@ -10,8 +10,8 @@ Easily understand defenition
 
 def PrecomputePositionalEncoding():
     # sinsuodial functions +1 without SeqPool Layer
-    positions = torch.arange(int(N)).unsqueeze(1).double()
-    embedding_positions = torch.arange(EMBEDDING_DIM).unsqueeze(0).double()
+    positions = torch.arange(int(N)).unsqueeze(1).float()
+    embedding_positions = torch.arange(EMBEDDING_DIM).unsqueeze(0).float()
     even_indices= (embedding_positions[embedding_positions % 2 == 0]).int()
     odd_indices = (embedding_positions[embedding_positions % 2 != 0]).int()
 
@@ -37,7 +37,8 @@ def ComputePatches(img):
     unfold = torch.nn.Unfold((PATCH_SIZE,PATCH_SIZE), stride=PATCH_SIZE)
     output = unfold(img)
     output = output.permute(0,2,1)
-    return output
+    patches = torch.reshape(output, (-1,int(N), CHANNELS, int(PATCH_SIZE), int(PATCH_SIZE)))
+    return output, patches
 
 
 def PrecomputeMeshGrid():
