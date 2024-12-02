@@ -58,23 +58,22 @@ for e in range(epochs):
     running_loss = 0.0
     total_loss = 0.0
 
+    print("---------------------------Training--------------------------------")
     for iteration, batch in enumerate(train_dataloader):
-        image, label  = batch
+        image, labels  = batch
 
         optimizer.zero_grad()
 
         vision_patches, conv_patches = ComputePatches(image)
         vision_patches = vision_patches.to(device)
         conv_patches = conv_patches.to(device)
-        label = label.to(device)
+        labels = labels.to(device)
 
         # *********************************** #
 
-        logits = model(vision_patches, conv_patches)
-        logits = logits.squeeze(-1)
-        
+        classification_logits, loss_logits = model(vision_patches, conv_patches, labels)
 
-        loss_value = loss(logits,label)
+        loss_value = loss(loss_logits,labels)
         loss_value.backward()
 
         #torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -85,18 +84,20 @@ for e in range(epochs):
 
         total_loss += loss_value.item()
 
-        # test * remove when done
-        #print(logits)
-        print(logits.min(), logits.max(), logits.mean())
-
 
 
         if iteration % metric_check == (metric_check - 1):
-            print(f"Loss Calculation at Iteration {iteration}")
+            print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print(f"Metric Calculation at Iteration {iteration}")
             print(f"Iteration Training Average Loss {(running_loss/(metric_check))}")
+            print("Classification Logits range check")
+            print(classification_logits[0,labels[0].item() - 2:labels[0].item() + 3])
+            print("Loss Logits range check")
+            print(loss_logits[0,labels[0].item() - 2:labels[0].item() + 3])
             running_loss = 0.0
+            print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
-    print("----------------------------------------------------------------")
+    print("----------------------------End Training--------------------------------")
     total_average_loss = (total_loss/len(train_dataloader))
     print(f"Total Training Average Loss {total_average_loss}")
 
@@ -111,12 +112,13 @@ for e in range(epochs):
     running_loss = 0.0
     total_loss = 0.0
 
+    print("-----------------------------Testing------------------------------")
     with torch.no_grad():
         for iteration, batch in enumerate(test_dataloader):
-                image, label = batch
+                image, labels = batch
 
                 image = image.to(device)
-                label = label.to(device)
+                labels = labels.to(device)
 
                 vision_patches, conv_patches = ComputePatches(image)
 
@@ -125,26 +127,25 @@ for e in range(epochs):
                 
                 # ************************************ #
 
-                logits = model(vision_patches, conv_patches)
-                logits = logits.squeeze(-1)
+                classification_logits, _ = model(vision_patches, conv_patches, labels)
 
-                loss_value = loss(logits,label)
+                loss_value = loss(classification_logits,labels)
 
                 running_loss += loss_value.item()
 
                 total_loss += loss_value.item()
 
 
-                # test * remove when done
-                break
-
-
                 if iteration % metric_check == (metric_check - 1):
-                    print(f"Loss Calculation at Iteration {iteration}")
+                    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                    print(f"Metric Calculation at Iteration {iteration}")
                     print(f"Iteration Testing Average Loss {(running_loss/(metric_check))}")
+                    print("Classification Logits range check")
+                    print(classification_logits[0,labels[0].item() - 2:labels[0].item() + 3])
                     running_loss = 0.0
+                    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
-    print("----------------------------------------------------------------")
+    print("--------------------------End Testing----------------------------------")
     total_average_loss = (total_loss/len(test_dataloader))
     print(f"Total Testing Average Loss {total_average_loss}")
 
@@ -152,4 +153,4 @@ for e in range(epochs):
     save_losses("Testing", testing_losses, testing_loss_path)
 
     print(f"End of Epoch {e}")
-    # ** testing
+

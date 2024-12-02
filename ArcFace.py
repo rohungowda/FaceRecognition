@@ -1,41 +1,26 @@
 import torch
-from Constants import CLASSES, SUB_CENTERS, EMBEDDING_DIM, S
+from Constants import CLASSES, EMBEDDING_DIM,M
 
-class ArcFace(torch.nn.Module):
-    def __init__(self, m):
+class ArcFaceLoss(torch.nn.Module):
+    def __init__(self):
         super().__init__()
+        self.W = torch.nn.Parameter(torch.randn((CLASSES,EMBEDDING_DIM), dtype=torch.float32))
 
-        self.m = m
-        self.W = torch.nn.Parameter(torch.randn((CLASSES, SUB_CENTERS, EMBEDDING_DIM), dtype=torch.float32))
-        self.pool_layer = torch.nn.MaxPool1d(SUB_CENTERS)
+    def forward(self, X, labels):
+        
+        s = torch.linalg.vector_norm(X, dim=1).unsqueeze(1)
+        norm_x = X / s
+        columns_norm = torch.linalg.vector_norm(self.W, dim=1).unsqueeze(1)
+        norm_W = (self.W / columns_norm).permute(1,0)
+        cos_thetas = norm_x @ norm_W
 
-    def forward(self, X):
-        #print(X.min(), X.max(), X.mean())
+        loss_logits = None
 
-        norm_X = X.norm(p=2, dim=1)
-        norm_W = self.W.norm(p=2)
+        if labels is not None:
+            one_hot = torch.nn.functional.one_hot(labels, num_classes=CLASSES).squeeze(1)
+            loss_logits = s * torch.cos(torch.arccos(cos_thetas) + (one_hot * M))
 
-        subCenter_angles = ((self.W @ X.T).permute(2,0,1)) / (norm_X * norm_W).view(-1,1,1)
+        classification_logits = s * cos_thetas
 
-        max_res = self.pool_layer(subCenter_angles)
-        max_res = torch.clamp(max_res, min=-1.0, max=1.0)
+        return classification_logits, loss_logits
 
-        angular_margins = torch.cos(torch.arccos(max_res) + self.m) * S
-
-        logits = torch.softmax(angular_margins, dim=1) # cross Entropy uses loss maybe need to remove?
-
-        #print(logits[0])
-
-        return logits
-    
-
-X = torch.randn((1, EMBEDDING_DIM))
-labels = torch.randint(5, (5,1))
-W = torch.nn.Parameter(torch.randn((5,EMBEDDING_DIM), dtype=torch.float32))
-one_hot = torch.nn.functional.one_hot(labels, num_classes=5)
-
-
-print(X.size())
-print(labels)
-print(W.size())
-print(one_hot)
