@@ -1,8 +1,9 @@
 CELEB_IDENTITY_PATH = "../Anno/identity_CelebA.txt"
 CELEB_IMAGES_ALIGN_PATH = "../img_align_celeba"
-CELEB_TRAINING_PATH = "../new_features/imgs" # change between features and new_features
-TRAIN_FEATURES_CSV_PATH = "../new_features/train_features.csv" # change between features and new_features
-TEST_FEATURES_CSV_PATH = "../new_features/test_features.csv" # change between features and new_features
+
+CELEB_TRAINING_PATH = "../final_features/imgs"
+TRAIN_FEATURES_CSV_PATH = "../final_features/train_features.csv"
+TEST_FEATURES_CSV_PATH = "../final_features/test_features.csv"
 MODEL_SAVE_PATH = "../saved_models/"
 
 IMAGE_SIZE = float(256.0)
@@ -12,24 +13,23 @@ PATCH_SIZE = 32
 N = (IMAGE_SIZE / PATCH_SIZE) *  (IMAGE_SIZE / PATCH_SIZE)
 
 ATTENTION_HEADS = 16
-EMBEDDING_DIM = 768
+EMBEDDING_DIM = 1024
 CHANNELS = 3
 
-SCALE = 2 # this is fine
-L = 1 # CHANGE THIS TO 12
-CLASSES = 450 # 0 - 449
+SCALE = 3
+L = 12
+CLASSES = 3069
 
-
-SUB_CENTERS = 3
-#M = 0.10 #think about linearly increasing m
-
-BATCH_SIZE = 72
+BATCH_SIZE = 256 # VARIABLE TO CHANGE
 CNN_EMBEDDING = 256
 CHUNK_SIZE = 16
-# ATTENTION_LAYERS = 1
 
 INITIAL_T= 100
 T_MULT= 1
 S = 64
 
 M = 0.35
+ACCURACY_SAMPLE = 25.0
+
+# UNUSED
+SUB_CENTERS = 3

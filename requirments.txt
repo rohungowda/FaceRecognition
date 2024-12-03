@@ -4,5 +4,3 @@ scikit-learn
 torch
 torchvision
 matplotlib
-retina-face
-tf-keras

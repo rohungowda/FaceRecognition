@@ -12,8 +12,8 @@ else:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-training_loss_path = os.path.join(MODEL_SAVE_PATH, f"training_losses.pkl")
-testing_loss_path = os.path.join(MODEL_SAVE_PATH, f"testing_losses.pkl")
+training_loss_path = os.path.join(MODEL_SAVE_PATH, f"training_metric.pkl")
+testing_loss_path = os.path.join(MODEL_SAVE_PATH, f"testing_metric.pkl")
 
 
 def load_losses(type,file_path):
@@ -26,27 +26,5 @@ def load_losses(type,file_path):
     
 print(load_losses("Training_losses", training_loss_path))
 print(load_losses("Testing_losses", testing_loss_path))
-
-
-MeshGrid = PrecomputeMeshGrid()
-DistanceMatrix, K = PrecomputeDistances()
-position_embed = PrecomputePositionalEncoding()
-
-model = FaceRec(position_embed, MeshGrid, DistanceMatrix, K, M)
-
-e = 4
-exit(0)
-model.load_state_dict(torch.load(os.path.join(MODEL_SAVE_PATH, f"FaceRecModel_{e}.pth"), weights_only=True))
-
-model.eval()
-
-with torch.no_grad():
-    
-    test_image = torch.randn((1,3,256,256), dtype=torch.float64)
-    keypoints = torch.randn((1,5,2), dtype=torch.float64)
-
-    patches = ComputePatches(test_image)
-
-    logits = model(patches, keypoints)
-
-    print(torch.argmax(logits))
+print(load_losses("Training_accuracy", training_loss_path))
+print(load_losses("Testing_accuracy", testing_loss_path))

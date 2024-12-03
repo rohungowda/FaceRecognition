@@ -3,27 +3,34 @@ import torch
 import pickle
 from Dataset import Image_Features_Dataset
 from torch.utils.data import DataLoader
-from Constants import TRAIN_FEATURES_CSV_PATH, TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH, MODEL_SAVE_PATH, BATCH_SIZE, INITIAL_T, T_MULT
+from Constants import TRAIN_FEATURES_CSV_PATH, TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH, MODEL_SAVE_PATH, BATCH_SIZE, INITIAL_T, T_MULT, ACCURACY_SAMPLE
 from helper import ComputePatches, PrecomputePositionalEncoding
 from Face_rec import FaceRec
 
 
+def calculate_accuracy(logits, labels):
+    sample_labels = (labels[:int(ACCURACY_SAMPLE)])
+    sample_logits = (logits[:int(ACCURACY_SAMPLE),:])
+    softmax_logits = torch.softmax(sample_logits, dim=-1)
+    _, predicted_classes = softmax_logits.max(dim=-1)
+    correct_predictions = (predicted_classes == sample_labels).sum().item()
+    accuracy = correct_predictions / (ACCURACY_SAMPLE)
+    return accuracy
 
+def save_losses(type, losses, file_path):
+    with open(file_path, 'wb') as f:
+        pickle.dump({f'{type}': losses}, f)
 
-#def linear_update_m(step):
-    #return (0.15 + ((0.50 - 0.15) * (step / 840))) # epoch * len(data_trainloader) * scale
-
-
+gpu_id = '0'
 if torch.cuda.is_available():
-    print(f"GPU: {torch.cuda.get_device_name(0)} is available.")
+    gpu_id = torch.cuda.current_device()
+    print(f"GPU: {torch.cuda.get_device_name(gpu_id)} is available.")
 else:
     print("No GPU available. Training will run on CPU.")
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
 
-
-#MeshGrid = PrecomputeMeshGrid()
-#DistanceMatrix, K = PrecomputeDistances()
+# Important Variables ******************************************
 position_embed = PrecomputePositionalEncoding().to(device)
 
 train_dataset = Image_Features_Dataset(TRAIN_FEATURES_CSV_PATH, CELEB_TRAINING_PATH)
@@ -37,35 +44,29 @@ model = model.to(device)
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.1)
-
 scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=INITIAL_T, T_mult=T_MULT)
-
 loss = torch.nn.CrossEntropyLoss()
-epochs = 7
+
+epochs = 100
+metric_check = 10
 
 training_losses = []
 testing_losses = []
+training_accuracy = []
+testing_accuracy = []
 
-metric_check = 10
+training_metric_path = os.path.join(MODEL_SAVE_PATH, f"training_metrics.pkl")
+testing_metric_path = os.path.join(MODEL_SAVE_PATH, f"testing_metrics.pkl")
 
-
-# ** test
-
-training_loss_path = os.path.join(MODEL_SAVE_PATH, f"training_losses.pkl")
-testing_loss_path = os.path.join(MODEL_SAVE_PATH, f"testing_losses.pkl")
-
-# Function to save losses
-def save_losses(type, losses, file_path):
-    with open(file_path, 'wb') as f:
-        pickle.dump({f'{type}_losses': losses}, f)
-
-print(len(train_dataloader)) #  
-print(len(test_dataloader)) # 
+print(f"Number of Training Batches: {str(len(train_dataloader))}")
+print(f"Number of Testing Batches: {str(len(test_dataloader))}") # 
 
 for e in range(epochs):
     print(f"Epoch {e}")
     running_loss = 0.0
     total_loss = 0.0
+    total_accuracy = 0.0
+    c = 0
 
     print("---------------------------Training--------------------------------")
     for iteration, batch in enumerate(train_dataloader):
@@ -83,12 +84,8 @@ for e in range(epochs):
 
         classification_logits, loss_logits = model(vision_patches, conv_patches, labels)
 
-       
         loss_value = loss(loss_logits,labels)
         loss_value.backward()
-
-
-        #torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
         optimizer.step()
         scheduler.step()
@@ -106,20 +103,26 @@ for e in range(epochs):
             print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             print(f"Metric Calculation at Iteration {iteration}")
             print(f"Iteration Training Average Loss {(running_loss/(metric_check))}")
-            print()
-            print("Logits range check - middle should be max")
-            print(labels[0].item())
-            print(classification_logits[0,labels[0].item() - 2:labels[0].item() + 3])
-            print(loss_logits[0,labels[0].item() - 2:labels[0].item() + 3])
+            accuracy = calculate_accuracy(classification_logits, labels)
+            total_accuracy += accuracy
+            print(f"Iteration Training Accuracy {accuracy}")
+
             running_loss = 0.0
+            c += 1
             print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
     print("----------------------------End Training--------------------------------")
     total_average_loss = (total_loss/len(train_dataloader))
+    total_average_accuracy = (total_accuracy/c)
+
     print(f"Total Training Average Loss {total_average_loss}")
+    print(f"Total Training Average Accuracy {total_average_accuracy}")
 
     training_losses.append(total_average_loss)
-    save_losses("Training", training_losses, training_loss_path)
+    training_accuracy.append(total_average_accuracy)
+
+    save_losses("Training_losses", training_losses, training_metric_path)
+    save_losses("Training_accuracy", training_accuracy, training_metric_path)
 
     # saving model
     save_model = os.path.join(MODEL_SAVE_PATH, f"FaceRecModel_{e}.pth")
@@ -128,6 +131,8 @@ for e in range(epochs):
     # testing iteration *************************************** testing iteration
     running_loss = 0.0
     total_loss = 0.0
+    total_accuracy = 0.0
+    c = 0
 
     print("-----------------------------Testing------------------------------")
     with torch.no_grad():
@@ -154,20 +159,26 @@ for e in range(epochs):
                     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                     print(f"Metric Calculation at Iteration {iteration}")
                     print(f"Iteration Testing Average Loss {(running_loss/(metric_check))}")
-                    print()
-                    print("Softmax Logits range check - middle should be max")
-                    print(labels[0].item())
-                    print(torch.softmax(classification_logits[0,labels[0].item() - 2:labels[0].item() + 3], dim=-1))
-                    print(torch.softmax(loss_logits[0,labels[0].item() - 2:labels[0].item() + 3], dim=-1))
+                    accuracy = calculate_accuracy(classification_logits, labels)
+                    total_accuracy += accuracy
+                    print(f"Iteration Testing Accuracy {accuracy}")
+
                     running_loss = 0.0
+                    c += 1
                     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
     print("--------------------------End Testing----------------------------------")
     total_average_loss = (total_loss/len(test_dataloader))
+    total_average_accuracy = (total_accuracy/c)
+
     print(f"Total Testing Average Loss {total_average_loss}")
+    print(f"Total Testing Average Accuracy {total_average_accuracy}")
 
     testing_losses.append(total_average_loss)
-    save_losses("Testing", testing_losses, testing_loss_path)
+    testing_accuracy.append(total_average_accuracy)
+
+    save_losses("Testing_losses", testing_losses, testing_metric_path)
+    save_losses("Testing_accuracy", testing_accuracy, testing_metric_path)
 
     print(f"End of Epoch {e}")
 

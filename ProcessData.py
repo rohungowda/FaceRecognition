@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 import pandas as pd
 from collections import defaultdict
@@ -8,26 +7,7 @@ from sklearn.model_selection import train_test_split
 import os
 from PIL import Image
 from torchvision import transforms
-import matplotlib.pyplot as plt
-from retinaface import RetinaFace
 
-
-
-def get_landmarks(image_name):
-    keys = ["left_eye", "right_eye", "nose", "mouth_left", "mouth_right"]
-    landmarks = RetinaFace.detect_faces(os.path.join(CELEB_TRAINING_PATH, image_name))
-    if 'face_1' not in landmarks or 'landmarks' not in landmarks['face_1']:
-        return None
-    
-    landmarks = landmarks['face_1']['landmarks']
-
-    res = []
-    for key in keys:
-        x,y = landmarks[key]
-        res.append(x) # x
-        res.append(y) # y
-    
-    return res
 
 
 def Process_Image(image_name):
@@ -59,17 +39,11 @@ def Process_Data():
 
     res = list(identity_hash.items())
 
-    # **Option 1 using K classes
-    #K = 15
-    #res.sort(key=lambda x : (len(x[1]), x[0]))
-    #K_identity = res[-K:]
-
-    # **Option 2 using A number limit
     Limit = 27  # use 25 very usefull
     K_identity = list(filter(lambda x : len(x[1]) > Limit, res))
     
 
-    columns = ["ImageFileName","Class", "lefteye_x", "lefteye_y", "righteye_x", "righteye_y", "nose_x", "nose_y", "leftmouth_x", "leftmouth_y", "rightmouth_x", "rightmouth_y"]
+    columns = ["ImageFileName","Class"]
 
     df = pd.DataFrame(columns=columns).to_csv(TRAIN_FEATURES_CSV_PATH, index=False)
 
@@ -77,10 +51,7 @@ def Process_Data():
         print(str((i/len(K_identity)) * 100))
         for j,image in enumerate(images):
             Process_Image(image)
-            res =  get_landmarks(image)
-            if res is None:
-                continue
-            data_point = [image, i] + res
+            data_point = [image, i]
             data_row = pd.DataFrame([data_point], columns=columns)
             data_row.to_csv(TRAIN_FEATURES_CSV_PATH, mode='a', index=False, header=False)
 
