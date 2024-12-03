@@ -21,9 +21,15 @@ CLASSES = 450 # 0 - 449
 
 
 SUB_CENTERS = 3
-M = 0.35
+#M = 0.10 #think about linearly increasing m
 
-BATCH_SIZE = 64
+BATCH_SIZE = 72
 CNN_EMBEDDING = 256
 CHUNK_SIZE = 16
 # ATTENTION_LAYERS = 1
+
+INITIAL_T= 100
+T_MULT= 1
+S = 64
+
+M = 0.35

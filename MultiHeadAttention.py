@@ -5,10 +5,16 @@ class MultiHeadAttention(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.WQ = torch.nn.Parameter(torch.randn((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
-        self.WK = torch.nn.Parameter(torch.randn((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
-        self.WV = torch.nn.Parameter(torch.randn((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
-        self.WO = torch.nn.Parameter(torch.randn((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
+        self.WQ = torch.nn.Parameter(torch.empty((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
+        self.WK = torch.nn.Parameter(torch.empty((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
+        self.WV = torch.nn.Parameter(torch.empty((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
+        self.WO = torch.nn.Parameter(torch.empty((EMBEDDING_DIM, EMBEDDING_DIM), dtype=torch.float32))
+        torch.nn.init.xavier_uniform_(self.WQ)
+        torch.nn.init.xavier_uniform_(self.WK)
+        torch.nn.init.xavier_uniform_(self.WV)
+        torch.nn.init.xavier_uniform_(self.WO)
+
+
         self.division = EMBEDDING_DIM // ATTENTION_HEADS
 
     def forward(self, embeddings, B_matrix):

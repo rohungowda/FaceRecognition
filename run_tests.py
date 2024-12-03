@@ -35,7 +35,7 @@ position_embed = PrecomputePositionalEncoding()
 model = FaceRec(position_embed, MeshGrid, DistanceMatrix, K, M)
 
 e = 4
-
+exit(0)
 model.load_state_dict(torch.load(os.path.join(MODEL_SAVE_PATH, f"FaceRecModel_{e}.pth"), weights_only=True))
 
 model.eval()

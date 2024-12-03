@@ -1,5 +1,5 @@
 import torch
-from Constants import EMBEDDING_DIM, N, SCALE
+from Constants import EMBEDDING_DIM, SCALE
 from MultiHeadAttention import MultiHeadAttention
 
 class Transformer(torch.nn.Module):
