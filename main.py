@@ -3,19 +3,17 @@ import torch
 import pickle
 from Dataset import Image_Features_Dataset
 from torch.utils.data import DataLoader
-from Constants import TRAIN_FEATURES_CSV_PATH, TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH, MODEL_SAVE_PATH, BATCH_SIZE, INITIAL_T, T_MULT, ACCURACY_SAMPLE
+from Constants import TRAIN_FEATURES_CSV_PATH, TEST_FEATURES_CSV_PATH, CELEB_TRAINING_PATH, MODEL_SAVE_PATH, BATCH_SIZE, INITIAL_T, T_MULT
 from helper import ComputePatches, PrecomputePositionalEncoding
 from Face_rec import FaceRec
 
 
 def calculate_accuracy(logits, labels):
-    sample_labels = (labels[:int(ACCURACY_SAMPLE)])
-    sample_logits = (logits[:int(ACCURACY_SAMPLE),:])
-    softmax_logits = torch.softmax(sample_logits, dim=-1)
+    softmax_logits = torch.softmax(logits, dim=-1)
     _, predicted_classes = softmax_logits.max(dim=-1)
-    correct_predictions = (predicted_classes == sample_labels).sum().item()
-    accuracy = correct_predictions / (ACCURACY_SAMPLE)
-    return accuracy
+    correct_predictions = (predicted_classes == labels).sum().item()
+    accuracy = float(correct_predictions) / float(len(labels))
+    return accuracy * 100.0
 
 def save_losses(type, losses, file_path):
     with open(file_path, 'wb') as f:
@@ -52,11 +50,9 @@ metric_check = 10
 
 training_losses = []
 testing_losses = []
-training_accuracy = []
-testing_accuracy = []
 
-training_metric_path = os.path.join(MODEL_SAVE_PATH, f"training_metrics.pkl")
-testing_metric_path = os.path.join(MODEL_SAVE_PATH, f"testing_metrics.pkl")
+training_loss_path = os.path.join(MODEL_SAVE_PATH, f"training_loss.pkl")
+testing_loss_path = os.path.join(MODEL_SAVE_PATH, f"testing_loss.pkl")
 
 print(f"Number of Training Batches: {str(len(train_dataloader))}")
 print(f"Number of Testing Batches: {str(len(test_dataloader))}") # 
@@ -72,7 +68,6 @@ for e in range(epochs):
     for iteration, batch in enumerate(train_dataloader):
 
         image, labels = batch
-
         optimizer.zero_grad()
 
         vision_patches, conv_patches = ComputePatches(image)
@@ -119,10 +114,8 @@ for e in range(epochs):
     print(f"Total Training Average Accuracy {total_average_accuracy}")
 
     training_losses.append(total_average_loss)
-    training_accuracy.append(total_average_accuracy)
 
-    save_losses("Training_losses", training_losses, training_metric_path)
-    save_losses("Training_accuracy", training_accuracy, training_metric_path)
+    save_losses("Training_losses", training_losses, training_loss_path)
 
     # saving model
     save_model = os.path.join(MODEL_SAVE_PATH, f"FaceRecModel_{e}.pth")
@@ -175,10 +168,8 @@ for e in range(epochs):
     print(f"Total Testing Average Accuracy {total_average_accuracy}")
 
     testing_losses.append(total_average_loss)
-    testing_accuracy.append(total_average_accuracy)
 
-    save_losses("Testing_losses", testing_losses, testing_metric_path)
-    save_losses("Testing_accuracy", testing_accuracy, testing_metric_path)
+    save_losses("Testing_losses", testing_losses, testing_loss_path)
 
     print(f"End of Epoch {e}")
 

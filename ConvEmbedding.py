@@ -21,7 +21,7 @@ class ConvEmbeddings(torch.nn.Module):
 
 
     def forward(self, image):
-        attention_tensor = torch.empty(image.size(0), ATTENTION_HEADS, int(N), int(N))
+        attention_tensor = torch.empty(image.size(0), ATTENTION_HEADS, int(N), int(N), device=image.device)
 
         chunks = torch.tensor_split(image, CHUNK_SIZE)
 
