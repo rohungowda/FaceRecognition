@@ -16,5 +16,5 @@ Research
  - ArcFace - https://arxiv.org/pdf/1801.07698
  - Transformer Architecture - https://arxiv.org/pdf/1706.03762
 
-#Project Goals
+Project Goals
  - To learn and apply the math learned from the research as well as my own unique method to create a Vision Transformer Architecture that can learn both global and local attention in its Multi-Attention-Head Block
